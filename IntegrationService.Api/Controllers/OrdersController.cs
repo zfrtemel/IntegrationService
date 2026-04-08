@@ -1,8 +1,8 @@
-using System.Net;
 using IntegrationService.Api.Infrastructure;
 using IntegrationService.Core.Models.Orders;
 using IntegrationService.Core.Responses;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace IntegrationService.Api.Controllers;
 

@@ -13,10 +13,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\IntegrationService.Core\IntegrationService.Core.csproj" />
-    <ProjectReference Include="..\IntegrationService.Providers.Trendyol\IntegrationService.Providers.Trendyol.csproj" />
-    <ProjectReference Include="..\IntegrationService.Providers.Hepsiburada\IntegrationService.Providers.Hepsiburada.csproj" />
-    <ProjectReference Include="..\IntegrationService.Providers.N11\IntegrationService.Providers.N11.csproj" />
-    <ProjectReference Include="..\IntegrationService.Providers.Pttavm\IntegrationService.Providers.Pttavm.csproj" />
+    <ProjectReference Include="..\Providers\IntegrationService.Providers.Hepsiburada\IntegrationService.Providers.Hepsiburada.csproj" />
+    <ProjectReference Include="..\Providers\IntegrationService.Providers.N11\IntegrationService.Providers.N11.csproj" />
+    <ProjectReference Include="..\Providers\IntegrationService.Providers.Pttavm\IntegrationService.Providers.Pttavm.csproj" />
+    <ProjectReference Include="..\Providers\IntegrationService.Providers.Trendyol\IntegrationService.Providers.Trendyol.csproj" />
   </ItemGroup>
 
 </Project>

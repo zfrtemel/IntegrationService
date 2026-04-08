@@ -2,10 +2,10 @@ using IntegrationService.Core.Contracts;
 using IntegrationService.Core.Exceptions;
 using IntegrationService.Core.Models.Providers;
 using IntegrationService.Core.Providers;
+using IntegrationService.Providers.Hepsiburada;
+using IntegrationService.Providers.N11;
+using IntegrationService.Providers.Pttavm;
 using IntegrationService.Providers.Trendyol;
-using HepsiburadaProvider = IntegrationService.Providers.Hepsiburada;
-using N11Provider = IntegrationService.Providers.N11;
-using PttavmProvider = IntegrationService.Providers.Pttavm;
 
 namespace IntegrationService.Api.Infrastructure;
 
@@ -73,9 +73,9 @@ public sealed class OrderProviderFactory : IOrderProviderFactory
         var merchantId = ReadRequiredHeader(httpContext, IntegrationHeaderNames.HepsiburadaMerchantId);
         var username = ReadOptionalHeader(httpContext, IntegrationHeaderNames.HepsiburadaUsername);
         var password = ReadOptionalHeader(httpContext, IntegrationHeaderNames.HepsiburadaPassword);
-        var credentials = new HepsiburadaProvider.HepsiburadaCredentials(merchantId, username, password);
+        var credentials = new HepsiburadaCredentials(merchantId, username, password);
         var http = _httpClientFactory.CreateClient("Hepsiburada");
-        return new HepsiburadaProvider.HepsiburadaTestOrderProvider(credentials, http);
+        return new HepsiburadaTestOrderProvider(credentials, http);
     }
 
     private IOrderProvider CreateN11(HttpContext httpContext)
@@ -83,9 +83,9 @@ public sealed class OrderProviderFactory : IOrderProviderFactory
         var apiKey = ReadRequiredHeader(httpContext, IntegrationHeaderNames.N11ApiKey);
         var apiSecret = ReadRequiredHeader(httpContext, IntegrationHeaderNames.N11ApiSecret);
         var merchantId = ReadOptionalHeader(httpContext, IntegrationHeaderNames.N11MerchantId) ?? "n11-default";
-        var credentials = new N11Provider.N11Credentials(apiKey, apiSecret, merchantId);
+        var credentials = new N11Credentials(apiKey, apiSecret, merchantId);
         var http = _httpClientFactory.CreateClient("N11");
-        return new N11Provider.N11TestOrderProvider(credentials, http);
+        return new N11TestOrderProvider(credentials, http);
     }
 
     private static IOrderProvider CreatePttavm(HttpContext httpContext)
@@ -93,8 +93,8 @@ public sealed class OrderProviderFactory : IOrderProviderFactory
         var apiKey = ReadRequiredHeader(httpContext, IntegrationHeaderNames.PttavmApiKey);
         var accessToken = ReadRequiredHeader(httpContext, IntegrationHeaderNames.PttavmAccessToken);
         var correlationId = ReadOptionalHeader(httpContext, IntegrationHeaderNames.PttavmCorrelationId) ?? Guid.NewGuid().ToString("N");
-        var credentials = new PttavmProvider.PttavmCredentials(apiKey, accessToken, correlationId);
-        return new PttavmProvider.PttavmOrderProvider(credentials);
+        var credentials = new PttavmCredentials(apiKey, accessToken, correlationId);
+        return new PttavmOrderProvider(credentials);
     }
 
     private static string ReadRequiredHeader(HttpContext httpContext, string headerName)

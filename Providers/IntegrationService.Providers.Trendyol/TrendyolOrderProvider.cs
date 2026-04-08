@@ -1,13 +1,13 @@
-using System.Net;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.Json;
 using IntegrationService.Core.Contracts;
 using IntegrationService.Core.Exceptions;
 using IntegrationService.Core.Models.Invoices;
 using IntegrationService.Core.Models.Orders;
 using IntegrationService.Core.Models.Providers;
 using IntegrationService.Core.Providers;
+using System.Net;
+using System.Net.Http.Headers;
+using System.Text;
+using System.Text.Json;
 
 namespace IntegrationService.Providers.Trendyol;
 
