@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.OpenApi" Version="2.4.1" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IntegrationService.Core\IntegrationService.Core.csproj" />
+    <ProjectReference Include="..\IntegrationService.Providers.Trendyol\IntegrationService.Providers.Trendyol.csproj" />
+    <ProjectReference Include="..\IntegrationService.Providers.Hepsiburada\IntegrationService.Providers.Hepsiburada.csproj" />
+    <ProjectReference Include="..\IntegrationService.Providers.N11\IntegrationService.Providers.N11.csproj" />
+    <ProjectReference Include="..\IntegrationService.Providers.Pttavm\IntegrationService.Providers.Pttavm.csproj" />
+  </ItemGroup>
+
+</Project>
