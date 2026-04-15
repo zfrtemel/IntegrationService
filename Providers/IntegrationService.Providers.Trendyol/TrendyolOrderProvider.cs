@@ -2,10 +2,12 @@ using IntegrationService.Core.Contracts;
 using IntegrationService.Core.Exceptions;
 using IntegrationService.Core.Models.Invoices;
 using IntegrationService.Core.Models.Orders;
-using IntegrationService.Core.Models.Providers;
 using IntegrationService.Core.Providers;
+using IntegrationService.Providers.Trendyol.Models.GetOrders;
+using RestSharp;
+using RestSharp.Serializers.Json;
+using System.Globalization;
 using System.Net;
-using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
 
@@ -16,23 +18,27 @@ public sealed class TrendyolOrderProvider : IOrderProvider, IInvoiceProvider
     private const string OrdersRelativePathFormat = "order/sellers/{0}/orders";
 
     private readonly TrendyolCredentials _credentials;
-    private readonly HttpClient _httpClient;
+    private readonly RestClient _restClient;
 
-    public TrendyolOrderProvider(TrendyolCredentials credentials, HttpClient httpClient)
+    public TrendyolOrderProvider(TrendyolCredentials credentials)
     {
         _credentials = credentials;
-        _httpClient = httpClient;
         _credentials.Validate();
+
+        var basicToken = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_credentials.ApiKey}:{_credentials.ApiSecret}"));
+        _restClient = new RestClient(
+            new Uri("https://stageapigw.trendyol.com/integration/", UriKind.Absolute),
+            configureDefaultHeaders: headers =>
+            {
+                headers.TryAddWithoutValidation("Accept", "application/json");
+                headers.TryAddWithoutValidation("Authorization", $"Basic {basicToken}");
+                headers.TryAddWithoutValidation("User-Agent", $"{_credentials.SupplierId} - SelfIntegration");
+            },
+            configureSerialization: cfg =>
+                cfg.UseSystemTextJson(TrendyolOrderMapper.SerializerOptions));
     }
 
     public IntegrationProviderType Provider => IntegrationProviderType.Trendyol;
-    public ProviderCapabilities Capabilities => new()
-    {
-        SupportsOrderBillingFields = true,
-        SupportsInvoiceCreate = false,
-        SupportsInvoiceCancel = false,
-        SupportsInvoiceDownload = false
-    };
 
     public async Task<UnifiedOrderPageDto> GetOrdersAsync(UnifiedOrderQuery query, CancellationToken cancellationToken = default)
     {
@@ -51,14 +57,21 @@ public sealed class TrendyolOrderProvider : IOrderProvider, IInvoiceProvider
             qs.Add($"orderNumber={Uri.EscapeDataString(query.OrderNumber)}");
 
         var path = string.Format(OrdersRelativePathFormat, _credentials.SupplierId) + "?" + string.Join('&', qs);
-        using var request = CreateRequest(HttpMethod.Get, path);
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        await EnsureSuccess(response, cancellationToken);
+        var restRequest = new RestRequest(path);
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        var payload = await JsonSerializer.DeserializeAsync<TrendyolOrdersPageResponse>(stream, TrendyolOrderMapper.SerializerOptions, cancellationToken)
-            ?? new TrendyolOrdersPageResponse();
+        var restResponse = await _restClient.ExecuteAsync<TrendyolOrdersPageResponse>(restRequest, cancellationToken);
+        if (restResponse.StatusCode == HttpStatusCode.Unauthorized)
+            throw new UnauthorizedAccessException("Trendyol API kimlik doğrulaması başarısız.");
+        if (!restResponse.IsSuccessful)
+        {
+            var body = restResponse.Content ?? string.Empty;
+            var msg = string.IsNullOrWhiteSpace(body)
+                ? $"Trendyol API {(int)restResponse.StatusCode}"
+                : $"Trendyol API hatası: {(int)restResponse.StatusCode}";
+            throw new ExternalProviderException(msg, restResponse.StatusCode);
+        }
 
+        var payload = restResponse.Data ?? new TrendyolOrdersPageResponse();
         return TrendyolOrderMapper.ToPageDto(payload);
     }
 
@@ -68,53 +81,89 @@ public sealed class TrendyolOrderProvider : IOrderProvider, IInvoiceProvider
             return null;
 
         var qs = new List<string> { "page=0", "size=50" };
-        if (long.TryParse(externalOrderId, System.Globalization.NumberStyles.Integer, System.Globalization.CultureInfo.InvariantCulture, out var packageId))
+        if (long.TryParse(externalOrderId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var packageId))
             qs.Add($"shipmentPackageIds={packageId}");
         else
             qs.Add($"orderNumber={Uri.EscapeDataString(externalOrderId)}");
         var path = string.Format(OrdersRelativePathFormat, _credentials.SupplierId) + "?" + string.Join('&', qs);
-        using var request = CreateRequest(HttpMethod.Get, path);
-        using var response = await _httpClient.SendAsync(request, cancellationToken);
-        await EnsureSuccess(response, cancellationToken);
+        var restRequest = new RestRequest(path);
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
-        var payload = await JsonSerializer.DeserializeAsync<TrendyolOrdersPageResponse>(stream, TrendyolOrderMapper.SerializerOptions, cancellationToken);
+        var restResponse = await _restClient.ExecuteAsync<TrendyolOrdersPageResponse>(restRequest, cancellationToken);
+        if (restResponse.StatusCode == HttpStatusCode.Unauthorized)
+            throw new UnauthorizedAccessException("Trendyol API kimlik doğrulaması başarısız.");
+        if (!restResponse.IsSuccessful)
+        {
+            var body = restResponse.Content ?? string.Empty;
+            var msg = string.IsNullOrWhiteSpace(body)
+                ? $"Trendyol API {(int)restResponse.StatusCode}"
+                : $"Trendyol API hatası: {(int)restResponse.StatusCode}";
+            throw new ExternalProviderException(msg, restResponse.StatusCode);
+        }
+
+        var payload = restResponse.Data;
         var first = payload?.Content?.FirstOrDefault();
         return first is null ? null : TrendyolOrderMapper.ToDetail(first);
     }
 
-    public Task<InvoiceOperationResultDto> CreateInvoiceAsync(InvoiceCreateRequestDto request, CancellationToken cancellationToken = default)
-        => throw new NotSupportedByProviderException("Trendyol fatura operasyonları bu adaptörde henüz tanımlanmadı.");
-
-    public Task<InvoiceOperationResultDto> CancelInvoiceAsync(InvoiceCancelRequestDto request, CancellationToken cancellationToken = default)
-        => throw new NotSupportedByProviderException("Trendyol fatura iptal operasyonu bu adaptörde desteklenmiyor.");
-
-    public Task<InvoiceDocumentResultDto> GetInvoiceDocumentAsync(InvoiceDocumentRequestDto request, CancellationToken cancellationToken = default)
-        => throw new NotSupportedByProviderException("Trendyol fatura dökümanı operasyonu bu adaptörde desteklenmiyor.");
-
-    private HttpRequestMessage CreateRequest(HttpMethod method, string relativeUri)
+    public async Task<InvoiceOperationResultDto> CreateInvoiceAsync(InvoiceCreateRequestDto request, CancellationToken cancellationToken = default)
     {
-        var request = new HttpRequestMessage(method, relativeUri);
-        var token = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{_credentials.ApiKey}:{_credentials.ApiSecret}"));
-        request.Headers.Authorization = new AuthenticationHeaderValue("Basic", token);
-        request.Headers.TryAddWithoutValidation("User-Agent", $"{_credentials.SupplierId} - {_credentials.IntegrationLabel}");
-        request.Headers.TryAddWithoutValidation("storeFrontCode", _credentials.StoreFrontCode);
-        return request;
-    }
+        if (string.IsNullOrWhiteSpace(request.InvoiceUrl))
+            throw new ProviderValidationException("Trendyol fatura linki (InvoiceUrl) zorunludur.");
+        if (!long.TryParse(request.OrderId, NumberStyles.Integer, CultureInfo.InvariantCulture, out var packageId))
+            throw new ProviderValidationException("Trendyol için OrderId, shipmentPackageId (sayı) olmalıdır.");
 
-    private static async Task EnsureSuccess(HttpResponseMessage response, CancellationToken cancellationToken)
-    {
-        if (response.StatusCode == HttpStatusCode.Unauthorized)
+        var path = $"sellers/{_credentials.SupplierId}/seller-invoice-links";
+        var payload = new Dictionary<string, object?>
+        {
+            ["invoiceLink"] = request.InvoiceUrl,
+            ["shipmentPackageId"] = packageId,
+            ["invoiceDateTime"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()
+        };
+        if (!string.IsNullOrWhiteSpace(request.ExternalInvoiceNumber))
+        {
+            var s = request.ExternalInvoiceNumber.Trim();
+            if (s.Length == 16
+                && char.IsLetterOrDigit(s[0]) && char.IsLetterOrDigit(s[1]) && char.IsLetterOrDigit(s[2]))
+            {
+                var ok = true;
+                for (var i = 3; i < 16 && ok; i++)
+                {
+                    if (!char.IsDigit(s[i]))
+                        ok = false;
+                }
+                if (ok)
+                    payload["invoiceNumber"] = s;
+            }
+        }
+
+        var restRequest = new RestRequest(path, Method.Post);
+        restRequest.AddStringBody(JsonSerializer.Serialize(payload), ContentType.Json);
+
+        var restResponse = await _restClient.ExecuteAsync(restRequest, cancellationToken);
+        if (restResponse.StatusCode == HttpStatusCode.Unauthorized)
             throw new UnauthorizedAccessException("Trendyol API kimlik doğrulaması başarısız.");
+        if (restResponse.StatusCode == HttpStatusCode.Conflict)
+        {
+            var body = restResponse.Content ?? string.Empty;
+            throw new ExternalProviderException(string.IsNullOrWhiteSpace(body)
+                ? "Trendyol: Bu paket için fatura zaten iletilmiş veya çakışma oluştu."
+                : body, restResponse.StatusCode);
+        }
+        if (!restResponse.IsSuccessful)
+        {
+            var errBody = restResponse.Content ?? string.Empty;
+            var msg = string.IsNullOrWhiteSpace(errBody)
+                ? $"Trendyol API {(int)restResponse.StatusCode}"
+                : $"Trendyol API hatası: {(int)restResponse.StatusCode}";
+            throw new ExternalProviderException(msg, restResponse.StatusCode);
+        }
 
-        if (response.IsSuccessStatusCode)
-            return;
-
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-        var msg = string.IsNullOrWhiteSpace(body)
-            ? $"Trendyol API {(int)response.StatusCode} {response.ReasonPhrase}"
-            : $"Trendyol API hatası: {(int)response.StatusCode}";
-
-        throw new ExternalProviderException(msg, response.StatusCode);
+        return new InvoiceOperationResultDto
+        {
+            Success = true,
+            ProviderMessage = "Trendyol fatura linki kaydedildi.",
+            ExternalInvoiceId = request.ExternalInvoiceNumber,
+            DocumentUrl = request.InvoiceUrl
+        };
     }
 }

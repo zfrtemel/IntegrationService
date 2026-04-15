@@ -12,11 +12,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\IntegrationService.Application\IntegrationService.Application.csproj" />
     <ProjectReference Include="..\IntegrationService.Core\IntegrationService.Core.csproj" />
-    <ProjectReference Include="..\Providers\IntegrationService.Providers.Hepsiburada\IntegrationService.Providers.Hepsiburada.csproj" />
-    <ProjectReference Include="..\Providers\IntegrationService.Providers.N11\IntegrationService.Providers.N11.csproj" />
-    <ProjectReference Include="..\Providers\IntegrationService.Providers.Pttavm\IntegrationService.Providers.Pttavm.csproj" />
-    <ProjectReference Include="..\Providers\IntegrationService.Providers.Trendyol\IntegrationService.Providers.Trendyol.csproj" />
+    <ProjectReference Include="..\IntegrationService.Infrastructure\IntegrationService.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,6 +1,7 @@
-using System.Text.Json;
 using IntegrationService.Core.Models.Orders;
 using IntegrationService.Core.Providers;
+using IntegrationService.Providers.Trendyol.Models.GetOrders;
+using System.Text.Json;
 
 namespace IntegrationService.Providers.Trendyol;
 

@@ -1,10 +1,12 @@
 <Solution>
   <Folder Name="/Providers/">
     <Project Path="Providers/IntegrationService.Providers.Hepsiburada/IntegrationService.Providers.Hepsiburada.csproj" />
+    <Project Path="Providers/IntegrationService.Providers.N11/IntegrationService.Providers.N11.csproj" />
     <Project Path="Providers/IntegrationService.Providers.Pttavm/IntegrationService.Providers.Pttavm.csproj" />
     <Project Path="Providers/IntegrationService.Providers.Trendyol/IntegrationService.Providers.Trendyol.csproj" />
   </Folder>
   <Project Path="IntegrationService.Api/IntegrationService.Api.csproj" />
+  <Project Path="IntegrationService.Application/IntegrationService.Application.csproj" />
   <Project Path="IntegrationService.Core/IntegrationService.Core.csproj" />
-  <Project Path="Providers/IntegrationService.Providers.N11/IntegrationService.Providers.N11.csproj" />
+  <Project Path="IntegrationService.Infrastructure/IntegrationService.Infrastructure.csproj" />
 </Solution>

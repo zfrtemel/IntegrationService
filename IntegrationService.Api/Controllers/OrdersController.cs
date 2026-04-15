@@ -1,8 +1,7 @@
-using IntegrationService.Api.Infrastructure;
+using IntegrationService.Application.Services;
 using IntegrationService.Core.Models.Orders;
 using IntegrationService.Core.Responses;
 using Microsoft.AspNetCore.Mvc;
-using System.Net;
 
 namespace IntegrationService.Api.Controllers;
 
@@ -10,42 +9,18 @@ namespace IntegrationService.Api.Controllers;
 [Route("api/[controller]")]
 public sealed class OrdersController : BaseController
 {
-    private readonly IOrderProviderFactory _providerFactory;
-    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly IOrderApplicationService _orderApplicationService;
 
-    public OrdersController(IOrderProviderFactory providerFactory, IHttpContextAccessor httpContextAccessor)
+    public OrdersController(IOrderApplicationService orderApplicationService)
     {
-        _providerFactory = providerFactory;
-        _httpContextAccessor = httpContextAccessor;
+        _orderApplicationService = orderApplicationService;
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(APIResult<UnifiedOrderPageDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> List(
-        [FromQuery] int page = 0,
-        [FromQuery] int size = 50,
-        [FromQuery] long? startDateUnixMs = null,
-        [FromQuery] long? endDateUnixMs = null,
-        [FromQuery] string? status = null,
-        [FromQuery] string? orderNumber = null,
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> List([FromQuery] UnifiedOrderQuery filter, CancellationToken cancellationToken = default)
     {
-        var httpContext = _httpContextAccessor.HttpContext
-            ?? throw new InvalidOperationException("HttpContext bulunamadı.");
-
-        var resolved = _providerFactory.Resolve(httpContext);
-        var query = new UnifiedOrderQuery
-        {
-            Page = page,
-            Size = size,
-            StartDateUnixMs = startDateUnixMs,
-            EndDateUnixMs = endDateUnixMs,
-            Status = status,
-            OrderNumber = orderNumber
-        };
-
-        var data = await resolved.OrderProvider.GetOrdersAsync(query, cancellationToken);
-        return ApiResponse(ApiResult("Sipariş listesi alındı.", true, data));
+        return ApiResult("Sipariş listesi alındı.", true, await _orderApplicationService.ListAsync(HttpContext, filter, cancellationToken));
     }
 
     [HttpGet("{externalOrderId}")]
@@ -53,17 +28,8 @@ public sealed class OrdersController : BaseController
     [ProducesResponseType(typeof(APIResult<UnifiedOrderDto?>), StatusCodes.Status404NotFound)]
     public async Task<IActionResult> Detail([FromRoute] string externalOrderId, CancellationToken cancellationToken = default)
     {
-        var httpContext = _httpContextAccessor.HttpContext
-            ?? throw new InvalidOperationException("HttpContext bulunamadı.");
+        var detail = await _orderApplicationService.DetailAsync(HttpContext, externalOrderId, cancellationToken);
 
-        var resolved = _providerFactory.Resolve(httpContext);
-        var detail = await resolved.OrderProvider.GetOrderDetailAsync(externalOrderId, cancellationToken);
-
-        if (detail is null)
-        {
-            return ApiResponse(ApiResult<UnifiedOrderDto?>("Sipariş bulunamadı.", false, null, HttpStatusCode.NotFound));
-        }
-
-        return ApiResponse(ApiResult("Sipariş detayı alındı.", true, detail));
+        return ApiResult("Sipariş detayı alındı.", true, detail);
     }
 }
