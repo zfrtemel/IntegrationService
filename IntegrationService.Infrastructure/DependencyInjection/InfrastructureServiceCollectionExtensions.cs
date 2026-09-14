@@ -14,6 +14,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IOrderProviderFactory, HepsiburadaOrderProviderFactory>();
         services.AddScoped<IOrderProviderFactory, N11OrderProviderFactory>();
         services.AddScoped<IOrderProviderFactory, PttavmOrderProviderFactory>();
+        services.AddScoped<IOrderProviderFactory, ShopifyOrderProviderFactory>();
 
         services.AddScoped<IProviderResolver, OrderProviderResolver>();
 

@@ -5,5 +5,6 @@ public enum IntegrationProviderType
     Trendyol = 0,
     Hepsiburada = 1,
     N11 = 2,
-    Pttavm = 3
+    Pttavm = 3,
+    Shopify = 4
 }

@@ -25,7 +25,9 @@ public sealed class IntegrationHeadersOperationFilter : IOperationFilter
             });
         }
 
-        Header(IntegrationHeaderNames.Provider, "Zorunlu: Trendyol, Hepsiburada, N11 veya Pttavm", required: true);
+        Header(IntegrationHeaderNames.Provider, "Zorunlu: Trendyol, Hepsiburada, N11, Pttavm veya Shopify", required: true);
+        //Header(IntegrationHeaderNames.ShopDomain, "Shopify için zorunlu, örn. my-store.myshopify.com.");
+        //Header(IntegrationHeaderNames.ApiVersion, "Shopify: boş bırakılırsa varsayılan Admin API sürümü kullanılır.");
         //Header(IntegrationHeaderNames.SupplierId, "Trendyol için zorunlu (sayı). Diğer provider’larda kullanılmaz.");
         //Header(IntegrationHeaderNames.MerchantId, "Hepsiburada ve N11 için zorunlu. Trendyol/Pttavm’de kullanılmaz.");
         //Header(IntegrationHeaderNames.ApiKey, "Trendyol, N11 ve Pttavm için zorunlu.");

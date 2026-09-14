@@ -12,4 +12,10 @@ public static class IntegrationHeaderNames
     public const string AccessToken = "X-Integration-Access-Token";
     public const string CorrelationId = "X-Integration-Correlation-Id";
     public const string StoreFrontCode = "X-Integration-Store-Front-Code";
+
+    /// <summary>Shopify mağaza alan adı, örn. "my-store.myshopify.com".</summary>
+    public const string ShopDomain = "X-Integration-Shop-Domain";
+
+    /// <summary>Sağlayıcı API sürümü (opsiyonel); Shopify Admin API için örn. "2025-07".</summary>
+    public const string ApiVersion = "X-Integration-Api-Version";
 }

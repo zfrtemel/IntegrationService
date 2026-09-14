@@ -21,7 +21,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Integration Service — Çoklu Provider Sipariş API",
         Version = "v1",
-        Description = "Sipariş + fatura uçlarında provider header setini doldurun. Trendyol, Hepsiburada, N11 ve PttAVM desteklenir."
+        Description = "Sipariş + fatura uçlarında provider header setini doldurun. Trendyol, Hepsiburada, N11, PttAVM ve Shopify desteklenir."
     });
     options.OperationFilter<IntegrationHeadersOperationFilter>();
 });
