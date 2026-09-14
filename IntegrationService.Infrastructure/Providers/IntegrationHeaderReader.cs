@@ -1,3 +1,4 @@
+using IntegrationService.Core.Exceptions;
 using Microsoft.AspNetCore.Http;
 
 namespace IntegrationService.Infrastructure.Providers;
@@ -7,8 +8,7 @@ internal static class IntegrationHeaderReader
     public static string Required(HttpContext httpContext, string headerName)
     {
         if (!httpContext.Request.Headers.TryGetValue(headerName, out var value) || string.IsNullOrWhiteSpace(value))
-            //throw new ProviderValidationException($"{headerName} header'ı zorunludur.");
-            return value.ToString();
+            throw new ProviderValidationException($"{headerName} header'ı zorunludur.");
 
         return value.ToString();
     }

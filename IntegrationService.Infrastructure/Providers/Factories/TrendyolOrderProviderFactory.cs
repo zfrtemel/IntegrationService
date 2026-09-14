@@ -1,4 +1,5 @@
 using IntegrationService.Application.Abstractions;
+using IntegrationService.Core.Exceptions;
 using IntegrationService.Core.Providers;
 using IntegrationService.Providers.Trendyol;
 using Microsoft.AspNetCore.Http;
@@ -11,18 +12,14 @@ public sealed class TrendyolOrderProviderFactory : IOrderProviderFactory
 
     public ProviderResolution Create(HttpContext httpContext)
     {
-        //var supplierIdRaw = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.SupplierId);
-        var credentials = new TrendyolCredentials(2738, "LfugdLIYeTzFgtBjroIS", "50beDSmxUQIu6AXJJuHE");
-        //if (!long.TryParse(supplierIdRaw, out var supplierIdValue))
-        //    throw new ProviderValidationException($"{IntegrationHeaderNames.SupplierId} geçerli bir sayı olmalıdır.");
+        var supplierIdRaw = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.SupplierId);
+        if (!long.TryParse(supplierIdRaw, out var supplierId))
+            throw new ProviderValidationException($"{IntegrationHeaderNames.SupplierId} geçerli bir sayı olmalıdır.");
 
-        //var apiKey = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.ApiKey);
-        //var apiSecret = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.ApiSecret);
+        var apiKey = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.ApiKey);
+        var apiSecret = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.ApiSecret);
 
-        //var opt = _options.Value;
-        //var storeFront = IntegrationHeaderReader.Optional(httpContext, IntegrationHeaderNames.StoreFrontCode)
-        //    ?? opt.DefaultStoreFrontCode;
-
+        var credentials = new TrendyolCredentials(supplierId, apiKey, apiSecret);
         var provider = new TrendyolOrderProvider(credentials);
         return new ProviderResolution(provider, provider);
     }
