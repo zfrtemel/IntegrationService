@@ -13,7 +13,8 @@ public sealed class N11OrderProviderFactory : IOrderProviderFactory
     {
         var apiKey = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.ApiKey);
         var apiSecret = IntegrationHeaderReader.Required(httpContext, IntegrationHeaderNames.ApiSecret);
-        var credentials = new N11Credentials("030a5d62-0eb1-4c19-9a44-8dc3bb674b25", "TA5OX7OAFq5pP5Rr");
+
+        var credentials = new N11Credentials(apiKey, apiSecret);
         var provider = new N11OrderProvider(credentials);
         return new ProviderResolution(provider, provider);
     }
