@@ -17,6 +17,9 @@ public sealed class ShopifyOrderProvider : IOrderProvider, IInvoiceProvider
     private const string OrdersCountRelativePath = "orders/count.json";
     private const int MaxPageSize = 250;
 
+    /// <summary>since_id ile sayfalama id sırasını varsaydığı için listeleme de id'ye göre artan sıralanır.</summary>
+    private const string OrderByIdAscending = "order=id+asc";
+
     private readonly ShopifyCredentials _credentials;
     private readonly RestClient _restClient;
 
@@ -61,7 +64,8 @@ public sealed class ShopifyOrderProvider : IOrderProvider, IInvoiceProvider
         var filters = BuildFilters(query);
 
         // Shopify REST sayfalama cursor tabanlıdır; page/size sözleşmesini korumak için
-        // istenen sayfaya kadar since_id ile ilerliyoruz.
+        // istenen sayfaya kadar since_id ile ilerliyoruz. since_id id sırasına göre
+        // çalıştığı için listelemenin de aynı sırada olması şarttır.
         var sinceId = page == 0 ? null : await SeekSinceIdAsync(filters, page, size, cancellationToken);
         if (page > 0 && sinceId is null)
         {
@@ -69,7 +73,7 @@ public sealed class ShopifyOrderProvider : IOrderProvider, IInvoiceProvider
             return ShopifyOrderMapper.ToPageDto(new ShopifyOrdersResponse(), page, size, emptyTotal);
         }
 
-        var qs = new List<string>(filters) { $"limit={size}" };
+        var qs = new List<string>(filters) { $"limit={size}", OrderByIdAscending };
         if (sinceId is not null)
             qs.Add($"since_id={sinceId}");
 
@@ -149,7 +153,7 @@ public sealed class ShopifyOrderProvider : IOrderProvider, IInvoiceProvider
             {
                 $"limit={size}",
                 "fields=id",
-                "order=id+asc"
+                OrderByIdAscending
             };
             if (sinceId is not null)
                 qs.Add($"since_id={sinceId}");

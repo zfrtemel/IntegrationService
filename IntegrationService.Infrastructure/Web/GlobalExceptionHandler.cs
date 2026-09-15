@@ -48,6 +48,7 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             ProviderValidationException e => (HttpStatusCode.BadRequest, e.Message, false),
             ProviderNotSupportedException e => (HttpStatusCode.BadRequest, e.Message, false),
             NotSupportedByProviderException e => ((HttpStatusCode)422, e.Message, false),
+            NotFoundException e => (HttpStatusCode.NotFound, e.Message, false),
             UnauthorizedAccessException e => (HttpStatusCode.Unauthorized, e.Message, false),
             ExternalProviderException e => (MapProviderHttpStatus(e.StatusCode), e.Message, false),
             HttpRequestException => (HttpStatusCode.BadGateway, "Harici servise erişilemedi.", true),
